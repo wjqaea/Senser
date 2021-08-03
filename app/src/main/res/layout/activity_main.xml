@@ -17,6 +17,16 @@
         app:layout_constraintTop_toTopOf="parent" />
 
     <Button
+        android:id="@+id/button_rssi"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="获取RSSI"
+        app:layout_constraintBottom_toTopOf="@+id/button_stop"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/button_start" />
+
+    <Button
         android:id="@+id/button_stop"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
