@@ -1,13 +1,14 @@
 package edu.ysu.myapplication.service;
 
-import android.Manifest;
 import android.app.Service;
 import android.bluetooth.BluetoothAdapter;
+import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothManager;
 import android.bluetooth.le.ScanCallback;
 import android.bluetooth.le.ScanResult;
 import android.content.Context;
 import android.content.Intent;
+import android.os.Handler;
 import android.os.IBinder;
 import android.util.Log;
 import android.widget.Toast;
@@ -18,25 +19,23 @@ import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.util.List;
-
-import edu.ysu.myapplication.MainActivity;
-import edu.ysu.myapplication.PermissionListener;
+import java.util.Set;
 
 
 public class RssiService extends Service {
 
     private BluetoothAdapter mBluetoothAdapter;
-//    private Handler mHandler = new Handler();
+    private Handler mHandler = new Handler();
     private static final long SCAN_PERIOD = 10000;
     private BufferedWriter bufferedWriter;
+    Set<String> deviceSet;
 
     @Nullable
     @Override
     public IBinder onBind(Intent intent) {
         Log.d("TAG", "onBind: in");
 
-        requestPermission();
+        //requestPermission();
 
         String dateString = intent.getStringExtra("dateString");
         String pathString = getExternalFilesDir(null).getAbsolutePath()+"/"+dateString+"/";
@@ -56,7 +55,7 @@ public class RssiService extends Service {
         } catch (IOException e) {
             e.printStackTrace();
         }
-
+        deviceSet.clear();
         scanLeDevice(true);
         return null;
     }
@@ -117,35 +116,23 @@ public class RssiService extends Service {
         super.onDestroy();
     }
 
-//    private BluetoothAdapter.LeScanCallback mLeScanCallback =
-//            new BluetoothAdapter.LeScanCallback() {
-//                @Override
-//                public void onLeScan(BluetoothDevice device, int rssi, byte[] scanRecord) {
-//                    try {
-//                        bufferedWriter.write(""+device.getAddress());
-//                        bufferedWriter.write(",");
-//                        bufferedWriter.write(""+device.getName());
-//                        bufferedWriter.write(",");
-//                        bufferedWriter.write(""+rssi);
-//                        bufferedWriter.newLine();
-//                    } catch (IOException e) {
-//                        e.printStackTrace();
-//                    }
-//                }
-//            };
+    private BluetoothAdapter.LeScanCallback mLeScanCallback =
+            new BluetoothAdapter.LeScanCallback() {
+                @Override
+                public void onLeScan(BluetoothDevice device, int rssi, byte[] scanRecord) {
+                    if (!deviceSet.contains(device.getAddress())) {
+                        writeInCsv(device, rssi);
+                        deviceSet.add(device.getAddress());
+                    }
+                }
+            };
 
     private final ScanCallback scanCallback = new ScanCallback() {
         @Override
         public void onScanResult(int callbackType, ScanResult result) {
-            try {
-                bufferedWriter.write(""+result.getDevice().getAddress());
-                bufferedWriter.write(",");
-                bufferedWriter.write(""+result.getDevice().getName());
-                bufferedWriter.write(",");
-                bufferedWriter.write(""+result.getRssi());
-                bufferedWriter.newLine();
-            } catch (IOException e) {
-                e.printStackTrace();
+            if (deviceSet.contains(result.getDevice().getAddress())) {
+                writeInCsv(result.getDevice(), result.getRssi());
+                deviceSet.add(result.getDevice().getAddress());
             }
             super.onScanResult(callbackType, result);
         }
@@ -155,40 +142,34 @@ public class RssiService extends Service {
     private void scanLeDevice(final boolean enable) {
         if (enable) {
             // Stops scanning after a pre-defined scan period.
-//            mHandler.postDelayed(new Runnable() {
-//                @Override
-//                public void run() {
-//                    mBluetoothAdapter.getBluetoothLeScanner().stopScan(scanCallback);
-//                    // mBluetoothAdapter.stopLeScan(mLeScanCallback);
-//                }
-//            }, SCAN_PERIOD);
-            //mBluetoothAdapter.startLeScan(mLeScanCallback);
+            mHandler.postDelayed(new Runnable() {
+                @Override
+                public void run() {
+                    mBluetoothAdapter.getBluetoothLeScanner().stopScan(scanCallback);
+//                    mBluetoothAdapter.stopLeScan(mLeScanCallback);
+                }
+            }, SCAN_PERIOD);
+//            mBluetoothAdapter.startLeScan(mLeScanCallback);
             mBluetoothAdapter.getBluetoothLeScanner().startScan(scanCallback);
         } else {
-            //mBluetoothAdapter.stopLeScan(mLeScanCallback);
+//            mBluetoothAdapter.stopLeScan(mLeScanCallback);
             mBluetoothAdapter.getBluetoothLeScanner().stopScan(scanCallback);
         }
     }
 
 
-    private void requestPermission() {
-        MainActivity.requestRunTimePermission(new String[]{Manifest.permission.ACCESS_COARSE_LOCATION, Manifest.permission.ACCESS_FINE_LOCATION}
-                , new PermissionListener() {
-                    @Override
-                    public void onGranted() {
-
-                    }
-
-                    @Override
-                    public void onGranted(List<String> grantedPermission) {
-
-                    }
-
-                    @Override
-                    public void onDenied(List<String> deniedPermission) {
-
-                    }
-                });
-
+    void writeInCsv(BluetoothDevice device , int rssi){
+        try {
+            bufferedWriter.write(""+device.getAddress());
+            bufferedWriter.write(",");
+            bufferedWriter.write(""+device.getName());
+            bufferedWriter.write(",");
+            bufferedWriter.write(""+rssi);
+            bufferedWriter.newLine();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
+
+
 }

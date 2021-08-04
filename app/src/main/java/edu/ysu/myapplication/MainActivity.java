@@ -8,6 +8,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
 import android.content.pm.PackageManager;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.util.Log;
@@ -18,6 +19,7 @@ import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
+import androidx.core.content.PermissionChecker;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -36,8 +38,18 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     Intent intentMagneticService;
     Intent intentRssiService;
 
-
     private static PermissionListener mlistener;
+
+    private static final int REQUEST_CODE = 0; // 请求码
+
+    // 所需的全部权限
+    static final String[] PERMISSIONS = new String[]{
+            Manifest.permission.ACCESS_COARSE_LOCATION,
+            Manifest.permission.ACCESS_FINE_LOCATION
+    };
+
+
+
 
     int btFlag = 0;
     long baseTime = 1628042000;
@@ -63,7 +75,17 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        init();
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            for (String str : PERMISSIONS) {
+                if (this.checkSelfPermission(str) != PackageManager.PERMISSION_GRANTED) { //申请权限
+                    this.requestPermissions(PERMISSIONS, 1);
+                }
+            }
+        }
+
+
+            init();
     }
 
     private void init(){
@@ -132,84 +154,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     }
 
 
-
-
-    /**
-     * 权限申请
-     * @param permissions 待申请的权限集合
-     * @param listener  申请结果监听事件
-     */
-    public static void requestRunTimePermission(String[] permissions, PermissionListener listener) {
-        mlistener = listener;
-
-        Activity topActivity = ActivityCollector.getTopActivity();
-        if (topActivity == null) {
-            return;
-        }
-
-        //用于存放为授权的权限
-        List<String> permissionList = new ArrayList<>();
-        //遍历传递过来的权限集合
-        for (String permission : permissions) {
-            //判断是否已经授权
-            if (ContextCompat.checkSelfPermission(topActivity, permission) != PackageManager.PERMISSION_GRANTED) {
-                //未授权，则加入待授权的权限集合中
-                permissionList.add(permission);
-            }
-        }
-
-        //判断集合
-        if (!permissionList.isEmpty()) {  //如果集合不为空，则需要去授权
-            ActivityCompat.requestPermissions(topActivity, permissionList.toArray(new String[permissionList.size()]), 1);
-        } else {  //为空，则已经全部授权
-            listener.onGranted();
-        }
-    }
-
-
-    /**
-     * 权限申请结果
-     * @param requestCode  请求码
-     * @param permissions  所有的权限集合
-     * @param grantResults 授权结果集合
-     */
-    @Override
-    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
-        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
-        switch (requestCode) {
-            case 1:
-                if (grantResults.length > 0){
-                    //被用户拒绝的权限集合
-                    List<String> deniedPermissions = new ArrayList<>();
-                    //用户通过的权限集合
-                    List<String> grantedPermissions = new ArrayList<>();
-                    for (int i = 0; i < grantResults.length; i++) {
-                        //获取授权结果，这是一个int类型的值
-                        int grantResult = grantResults[i];
-
-                        if (grantResult != PackageManager.PERMISSION_GRANTED){ //用户拒绝授权的权限
-                            String permission = permissions[i];
-                            deniedPermissions.add(permission);
-                        }else{  //用户同意的权限
-                            String permission = permissions[i];
-                            grantedPermissions.add(permission);
-                        }
-                    }
-
-                    if (deniedPermissions.isEmpty()){  //用户拒绝权限为空
-                        mlistener.onGranted();
-                    }else {  //不为空
-                        //回调授权成功的接口
-                        mlistener.onDenied(deniedPermissions);
-                        //回调授权失败的接口
-                        mlistener.onGranted(grantedPermissions);
-                    }
-                }
-                break;
-            default:
-                break;
-        }
-    }
 
 
 }
