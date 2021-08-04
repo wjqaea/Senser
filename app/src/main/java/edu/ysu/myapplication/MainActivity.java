@@ -22,6 +22,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     Intent intentMagneticService;
     Intent intentRssiService;
 
+    int btFlag = 0;
     long baseTime = 1624408500;
 
     @Override
@@ -63,6 +64,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     }
 
     private void startServices(){
+        btFlag = 1;
         String dateString = String.valueOf(System.currentTimeMillis()/1000 - baseTime);
         intentAccelerometerService = new Intent(MainActivity.this , AccelerometerService.class);
         intentGyroscopeService = new Intent(MainActivity.this , GyroscopeService.class);
@@ -76,6 +78,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     }
 
     private void getRssi(){
+        btFlag = 2;
         String dateString = String.valueOf(System.currentTimeMillis()/1000 - baseTime);
         intentRssiService = new Intent(MainActivity.this , RssiService.class);
         intentRssiService.putExtra("dateString" , dateString);
@@ -83,8 +86,13 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     }
 
     private void stopServices(){
-        stopService(intentAccelerometerService);
-        stopService(intentGyroscopeService);
-        stopService(intentMagneticService);
+        if (btFlag == 1) {
+            stopService(intentAccelerometerService);
+            stopService(intentGyroscopeService);
+            stopService(intentMagneticService);
+        }else if (btFlag == 2){
+            stopService(intentRssiService);
+        }
+        btFlag = 0;
     }
 }
