@@ -38,8 +38,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     Intent intentMagneticService;
     Intent intentRssiService;
 
-    private static PermissionListener mlistener;
-
     private static final int REQUEST_CODE = 0; // 请求码
 
     // 所需的全部权限
@@ -138,8 +136,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         String dateString = String.valueOf(System.currentTimeMillis()/1000 - baseTime);
         intentRssiService = new Intent(MainActivity.this , RssiService.class);
         intentRssiService.putExtra("dateString" , dateString);
-        bindService(intentRssiService,conn, Context.BIND_AUTO_CREATE);
-        //startService(intentRssiService);
+        //bindService(intentRssiService,conn, Context.BIND_AUTO_CREATE);
+        startService(intentRssiService);
     }
 
     private void stopServices(){

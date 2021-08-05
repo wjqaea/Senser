@@ -19,6 +19,8 @@ import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Set;
 
 
@@ -28,45 +30,44 @@ public class RssiService extends Service {
     private Handler mHandler = new Handler();
     private static final long SCAN_PERIOD = 10000;
     private BufferedWriter bufferedWriter;
-    Set<String> deviceSet;
+    Map<String, Integer> deviceNumMap, deviceAvgMap;
 
     @Nullable
     @Override
     public IBinder onBind(Intent intent) {
-        Log.d("TAG", "onBind: in");
-
-        //requestPermission();
-
-        String dateString = intent.getStringExtra("dateString");
-        String pathString = getExternalFilesDir(null).getAbsolutePath()+"/"+dateString+"/";
-        File path = new File(pathString);
-        boolean mkd = false;
-        if (!path.exists() || !path.isDirectory()) mkd = path.mkdirs();
-        if (!mkd) Toast.makeText(this, "文件夹创建失败", Toast.LENGTH_SHORT).show();
-        File file = new File(pathString,"RSSIData.csv");
-        try {
-            if(!file.exists()){
-                boolean isCreate =  file.createNewFile();
-                if (isCreate) {
-                    Toast.makeText(this, "RSSI数据创建成功", Toast.LENGTH_SHORT).show();
-                }
-            }
-            bufferedWriter = new BufferedWriter(new FileWriter(file , true));
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        deviceSet.clear();
-        scanLeDevice(true);
+//        Log.d("TAG", "onBind: in");
+//
+//        //requestPermission();
+//
+//        String dateString = intent.getStringExtra("dateString");
+//        String pathString = getExternalFilesDir(null).getAbsolutePath()+"/"+dateString+"/";
+//        File path = new File(pathString);
+//        boolean mkd = false;
+//        if (!path.exists() || !path.isDirectory()) mkd = path.mkdirs();
+//        if (!mkd) Toast.makeText(this, "文件夹创建失败", Toast.LENGTH_SHORT).show();
+//        File file = new File(pathString,"RSSIData.csv");
+//        try {
+//            if(!file.exists()){
+//                boolean isCreate =  file.createNewFile();
+//                if (isCreate) {
+//                    Toast.makeText(this, "RSSI数据创建成功", Toast.LENGTH_SHORT).show();
+//                }
+//            }
+//            bufferedWriter = new BufferedWriter(new FileWriter(file , true));
+//        } catch (IOException e) {
+//            e.printStackTrace();
+//        }
+//        scanLeDevice(true);
         return null;
     }
-
-
 
 
     @Override
     public void onCreate() {
         super.onCreate();
 
+        deviceNumMap = new HashMap<>();
+        deviceAvgMap = new HashMap<>();
         final BluetoothManager bluetoothManager =
                 (BluetoothManager) getSystemService(Context.BLUETOOTH_SERVICE);
         mBluetoothAdapter = bluetoothManager.getAdapter();
@@ -78,27 +79,29 @@ public class RssiService extends Service {
     }
 
 
-
     @Override
-    public int onStartCommand(Intent intent, int flags, int startId){
+    public int onStartCommand(Intent intent, int flags, int startId) {
         String dateString = intent.getStringExtra("dateString");
-        String pathString = getExternalFilesDir(null).getAbsolutePath()+"/"+dateString+"/";
+        String pathString = getExternalFilesDir(null).getAbsolutePath() + "/" + dateString + "/";
         File path = new File(pathString);
         boolean mkd = false;
         if (!path.exists() || !path.isDirectory()) mkd = path.mkdirs();
         if (!mkd) Toast.makeText(this, "文件夹创建失败", Toast.LENGTH_SHORT).show();
-        File file = new File(pathString,"RSSIData.csv");
+        File file = new File(pathString, "RSSIData.csv");
         try {
-            if(!file.exists()){
-                boolean isCreate =  file.createNewFile();
+            if (!file.exists()) {
+                boolean isCreate = file.createNewFile();
                 if (isCreate) {
                     Toast.makeText(this, "RSSI数据创建成功", Toast.LENGTH_SHORT).show();
                 }
             }
-            bufferedWriter = new BufferedWriter(new FileWriter(file , true));
+            bufferedWriter = new BufferedWriter(new FileWriter(file, true));
         } catch (IOException e) {
             e.printStackTrace();
         }
+
+        deviceAvgMap.clear();
+        deviceNumMap.clear();
 
         scanLeDevice(true);
 
@@ -116,55 +119,77 @@ public class RssiService extends Service {
         super.onDestroy();
     }
 
-    private BluetoothAdapter.LeScanCallback mLeScanCallback =
+    private final BluetoothAdapter.LeScanCallback mLeScanCallback =
             new BluetoothAdapter.LeScanCallback() {
                 @Override
                 public void onLeScan(BluetoothDevice device, int rssi, byte[] scanRecord) {
-                    if (!deviceSet.contains(device.getAddress())) {
-                        writeInCsv(device, rssi);
-                        deviceSet.add(device.getAddress());
+                    if (!deviceNumMap.containsKey(device.getAddress())) {
+                        deviceNumMap.put(device.getAddress(), 1);
+                        deviceAvgMap.put(device.getAddress(), rssi);
+                    } else {
+                        int tmp = deviceNumMap.get(device.getAddress());
+                        int avg = deviceAvgMap.get(device.getAddress());
+                        avg = (tmp * avg + rssi) / (tmp + 1);
+                        deviceAvgMap.put(device.getAddress(), avg);
+                        deviceNumMap.put(device.getAddress(), tmp + 1);
                     }
+
+//                    writeInCsv(device, rssi);
                 }
             };
 
-    private final ScanCallback scanCallback = new ScanCallback() {
-        @Override
-        public void onScanResult(int callbackType, ScanResult result) {
-            if (deviceSet.contains(result.getDevice().getAddress())) {
-                writeInCsv(result.getDevice(), result.getRssi());
-                deviceSet.add(result.getDevice().getAddress());
-            }
-            super.onScanResult(callbackType, result);
-        }
-    };
+//    private final ScanCallback scanCallback = new ScanCallback() {
+//        @Override
+//        public void onScanResult(int callbackType, ScanResult result) {
+////            if (deviceNumMap.keySet().contains(result.getDevice().getAddress())) {
+////                writeInCsv(result.getDevice(), result.getRssi());
+////                deviceSet.add(result.getDevice().getAddress());
+////            }
+//            writeInCsv(result.getDevice(), result.getRssi());
+//            super.onScanResult(callbackType, result);
+//        }
+//    };
 
 
     private void scanLeDevice(final boolean enable) {
         if (enable) {
             // Stops scanning after a pre-defined scan period.
-            mHandler.postDelayed(new Runnable() {
-                @Override
-                public void run() {
-                    mBluetoothAdapter.getBluetoothLeScanner().stopScan(scanCallback);
-//                    mBluetoothAdapter.stopLeScan(mLeScanCallback);
+            mHandler.postDelayed(() -> {
+//                mBluetoothAdapter.getBluetoothLeScanner().stopScan(scanCallback);
+                Log.e("TAG", "scanLeDevice: STOP!!!");
+                try {
+                    for (Map.Entry<String, Integer> entry : deviceAvgMap.entrySet()) {
+                        bufferedWriter.write("" + entry.getKey());
+                        bufferedWriter.write(",");
+                        bufferedWriter.write("" + deviceNumMap.get(entry.getKey()));
+                        bufferedWriter.write(",");
+                        bufferedWriter.write("" + entry.getValue());
+                        bufferedWriter.newLine();
+                    }
+
+                    bufferedWriter.flush();
+                } catch (IOException e) {
+                    e.printStackTrace();
                 }
-            }, SCAN_PERIOD);
-//            mBluetoothAdapter.startLeScan(mLeScanCallback);
-            mBluetoothAdapter.getBluetoothLeScanner().startScan(scanCallback);
+                mBluetoothAdapter.stopLeScan(mLeScanCallback);
+            }, SCAN_PERIOD * 3);
+            mBluetoothAdapter.startLeScan(mLeScanCallback);
+//            mBluetoothAdapter.getBluetoothLeScanner().startScan(scanCallback);
         } else {
-//            mBluetoothAdapter.stopLeScan(mLeScanCallback);
-            mBluetoothAdapter.getBluetoothLeScanner().stopScan(scanCallback);
+            Log.e("TAG", "scanLeDevice: STOP YET");
+            mBluetoothAdapter.stopLeScan(mLeScanCallback);
+//            mBluetoothAdapter.getBluetoothLeScanner().stopScan(scanCallback);
         }
     }
 
 
-    void writeInCsv(BluetoothDevice device , int rssi){
+    void writeInCsv(BluetoothDevice device, int rssi) {
         try {
-            bufferedWriter.write(""+device.getAddress());
+            bufferedWriter.write("" + device.getAddress());
             bufferedWriter.write(",");
-            bufferedWriter.write(""+device.getName());
+            bufferedWriter.write("" + device.getName());
             bufferedWriter.write(",");
-            bufferedWriter.write(""+rssi);
+            bufferedWriter.write("" + rssi);
             bufferedWriter.newLine();
         } catch (IOException e) {
             e.printStackTrace();
