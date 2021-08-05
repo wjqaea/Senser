@@ -124,6 +124,7 @@ public class RssiService extends Service {
                 @Override
                 public void onLeScan(BluetoothDevice device, int rssi, byte[] scanRecord) {
                     if (!deviceNumMap.containsKey(device.getAddress())) {
+                        Log.e("TAG", "onLeScan: "+ device.getAddress()+"  is  "+ device.getName());
                         deviceNumMap.put(device.getAddress(), 1);
                         deviceAvgMap.put(device.getAddress(), rssi);
                     } else {
@@ -157,6 +158,7 @@ public class RssiService extends Service {
             mHandler.postDelayed(() -> {
 //                mBluetoothAdapter.getBluetoothLeScanner().stopScan(scanCallback);
                 Log.e("TAG", "scanLeDevice: STOP!!!");
+                Toast.makeText(this, "采集完成", Toast.LENGTH_SHORT).show();
                 try {
                     for (Map.Entry<String, Integer> entry : deviceAvgMap.entrySet()) {
                         bufferedWriter.write("" + entry.getKey());
