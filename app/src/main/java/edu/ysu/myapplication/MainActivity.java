@@ -2,27 +2,14 @@ package edu.ysu.myapplication;
 
 import android.Manifest;
 import android.annotation.SuppressLint;
-import android.app.Activity;
-import android.content.ComponentName;
-import android.content.Context;
 import android.content.Intent;
-import android.content.ServiceConnection;
 import android.content.pm.PackageManager;
 import android.os.Build;
 import android.os.Bundle;
-import android.os.IBinder;
-import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 
-import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.core.app.ActivityCompat;
-import androidx.core.content.ContextCompat;
-import androidx.core.content.PermissionChecker;
-
-import java.util.ArrayList;
-import java.util.List;
 
 import edu.ysu.myapplication.service.AccelerometerService;
 import edu.ysu.myapplication.service.GyroscopeService;
@@ -38,36 +25,15 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     Intent intentMagneticService;
     Intent intentRssiService;
 
-    private static final int REQUEST_CODE = 0; // 请求码
-
     // 所需的全部权限
     static final String[] PERMISSIONS = new String[]{
             Manifest.permission.ACCESS_COARSE_LOCATION,
             Manifest.permission.ACCESS_FINE_LOCATION
     };
 
-
-
-
     int btFlag = 0;
     long baseTime = 1628042000;
 
-
-    ServiceConnection conn = new ServiceConnection() {
-
-        @Override
-        public void onServiceDisconnected(ComponentName name) {
-            // TODO Auto-generated method stub
-        }
-
-        @Override
-        public void onServiceConnected(ComponentName name, IBinder service) {
-            // 当service绑定成功时，会调用次方法，可以在此申请权限
-            if (ContextCompat.checkSelfPermission(MainActivity.this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-                ActivityCompat.requestPermissions(MainActivity.this, new String[]{Manifest.permission.ACCESS_COARSE_LOCATION},1);
-            }
-        }
-    };
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -86,6 +52,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             init();
     }
 
+    @SuppressLint("HardwareIds")
     private void init(){
         buttonStart = findViewById(R.id.button_start);
         buttonStop = findViewById(R.id.button_stop);
@@ -150,8 +117,5 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         }
         btFlag = 0;
     }
-
-
-
 
 }
