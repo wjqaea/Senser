@@ -30,7 +30,6 @@ public class RssiService extends Service {
     private static final long SCAN_PERIOD = 10000;
     private BufferedWriter bufferedWriter;
     Map<String, Integer> deviceNumMap, deviceAvgMap;
-
     
     @Nullable
     @Override
