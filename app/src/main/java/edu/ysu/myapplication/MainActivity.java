@@ -12,6 +12,7 @@ import android.widget.Button;
 import androidx.appcompat.app.AppCompatActivity;
 
 import edu.ysu.myapplication.service.AccelerometerService;
+import edu.ysu.myapplication.service.BTService;
 import edu.ysu.myapplication.service.GyroscopeService;
 import edu.ysu.myapplication.service.MagneticService;
 import edu.ysu.myapplication.service.RssiService;
@@ -28,7 +29,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     // 所需的全部权限
     static final String[] PERMISSIONS = new String[]{
             Manifest.permission.ACCESS_COARSE_LOCATION,
-            Manifest.permission.ACCESS_FINE_LOCATION
+            Manifest.permission.ACCESS_FINE_LOCATION,
+            Manifest.permission.CAMERA
     };
 
     int btFlag = 0;
@@ -101,7 +103,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private void getRssi(){
         btFlag = 2;
         String dateString = String.valueOf(System.currentTimeMillis()/1000 - baseTime);
-        intentRssiService = new Intent(MainActivity.this , RssiService.class);
+        //intentRssiService = new Intent(MainActivity.this , RssiService.class);
+        intentRssiService = new Intent(MainActivity.this , BTService.class);
         intentRssiService.putExtra("dateString" , dateString);
         //bindService(intentRssiService,conn, Context.BIND_AUTO_CREATE);
         startService(intentRssiService);
