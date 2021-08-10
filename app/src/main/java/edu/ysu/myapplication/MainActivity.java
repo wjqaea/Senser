@@ -15,7 +15,6 @@ import edu.ysu.myapplication.service.AccelerometerService;
 import edu.ysu.myapplication.service.BTService;
 import edu.ysu.myapplication.service.GyroscopeService;
 import edu.ysu.myapplication.service.MagneticService;
-import edu.ysu.myapplication.service.RssiService;
 
 public class MainActivity extends AppCompatActivity implements View.OnClickListener{
 
@@ -34,7 +33,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     };
 
     int btFlag = 0;
-    long baseTime = 1628042000;
+    long baseTime = 1628500000;
 
 
     @Override
@@ -50,8 +49,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             }
         }
 
-
-            init();
+        init();
     }
 
     @SuppressLint("HardwareIds")
