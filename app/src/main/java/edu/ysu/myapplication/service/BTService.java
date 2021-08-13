@@ -123,6 +123,7 @@ public class BTService extends Service {
 
             scanDevice(false);
             bufferedWriter.close();
+            Toast.makeText(this, "服务关闭", Toast.LENGTH_SHORT).show();
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -160,19 +161,19 @@ public class BTService extends Service {
         }
     }
 
-    void looper() throws InterruptedException {
-
-        Thread thread = new Thread(() -> {
-            scanDevice(true);
-            Log.e("TAG", "run: " + (System.currentTimeMillis() - baseTime) / 1000);
-        });
-
-        for (int i = 0; i < 3; i++){
-            thread.start();
-            Thread.sleep(12000);
-        }
-        Log.e("TAG", "looper: " + (System.currentTimeMillis() - baseTime) / 1000);
-    }
+//    void looper() throws InterruptedException {
+//
+//        Thread thread = new Thread(() -> {
+//            scanDevice(true);
+//            Log.e("TAG", "run: " + (System.currentTimeMillis() - baseTime) / 1000);
+//        });
+//
+//        for (int i = 0; i < 3; i++){
+//            thread.start();
+//            Thread.sleep(12000);
+//        }
+//        Log.e("TAG", "looper: " + (System.currentTimeMillis() - baseTime) / 1000);
+//    }
 
     //广播接收器
     class SingBroadcastReceiver extends BroadcastReceiver {
