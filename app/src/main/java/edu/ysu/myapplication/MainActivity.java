@@ -33,7 +33,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     };
 
     int btFlag = 0;
-    long baseTime = 1628500000;
+    long baseTime = 1628500000 - 327717600;
 
 
     @Override
