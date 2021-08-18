@@ -143,10 +143,10 @@ public class BTService extends Service {
         Runnable runnable = new Runnable() {
             @Override
             public void run() {
-                handler.postDelayed(this, 14000);//!!!绑定秒数
                 //这里写你想循环的代码
                 scanDevice(true);
                 times++;
+                handler.postDelayed(this, 14000);//!!!绑定秒数
                 if(times == 20) {
                     handler.removeCallbacks(this);//!!!停止循环器
                     stopSelf();
